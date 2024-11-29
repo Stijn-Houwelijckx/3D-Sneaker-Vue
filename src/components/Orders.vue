@@ -41,14 +41,16 @@
                   v-model="order.status"
                   class="status-dropdown"
                   :class="{
-                    'border-pending': order.status === 'Pending',
+                    'border-pending': order.status === 'pending',
+                    'border-shipped': order.status === 'shipped',
                     'border-completed': order.status === 'Completed',
-                    'border-delete': order.status === 'Delete',
+                    'border-production': order.status === 'production',
                   }"
                 >
-                  <option value="Pending">Pending</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Delete">Delete</option>
+                  <option value="pending">pending</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="completed">Completed</option>
+                  <option value="production">In production</option>
                 </select>
               </td>
             </tr>
@@ -65,10 +67,10 @@ export default {
   data() {
     return {
       orders: [
-        { id: "#1001", date: "01 Jan 2024", customer: "John Doe", status: "Pending" },
-        { id: "#1002", date: "02 Jan 2024", customer: "Jane Smith", status: "Completed" },
-        { id: "#1003", date: "03 Jan 2024", customer: "Michael Brown", status: "Pending" },
-        { id: "#1004", date: "04 Jan 2024", customer: "Susan White", status: "Completed" },
+        { id: "#1001", date: "01 Jan 2024", customer: "John Doe", status: "pending" },
+        { id: "#1002", date: "02 Jan 2024", customer: "Jane Smith", status: "pending" },
+        { id: "#1003", date: "03 Jan 2024", customer: "Michael Brown", status: "pending" },
+        { id: "#1004", date: "04 Jan 2024", customer: "Susan White", status: "pending" },
       ],
     };
   },
@@ -209,7 +211,7 @@ export default {
   color: white;
 }
 
-.border-pending {
+.border-shipped {
   border-color: orange;
 }
 
@@ -217,7 +219,6 @@ export default {
   border-color: green;
 }
 
-.border-delete {
-  border-color: red;
-}
+
+
 </style>
