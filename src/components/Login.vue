@@ -1,13 +1,45 @@
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref } from "vue";
+import { useRouter } from "vue-router";
 
-const email = ref('');
-const password = ref('');
+// State
+const email = ref("");
+const password = ref("");
+const errorMessage = ref("");
 const router = useRouter();
 
+// Login Function using fetch
 function handleLogin() {
-  router.push('/orders'); // Navigate to the Orders route
+  fetch("https://threed-sneaker-nodejs.onrender.com/api/v1/users/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      user: {
+        email: email.value,
+        password: password.value,
+      },
+    }),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Login failed. Please check your credentials.");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      // Process the response
+      const user = data.data.user.user;
+      console.log("Login successful:", user);
+
+      // Redirect to the orders page
+      router.push("/orders");
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      errorMessage.value = error.message;
+    });
 }
 </script>
 
@@ -35,13 +67,14 @@ function handleLogin() {
           />
         </div>
         <button type="submit" class="login-button">Log In</button>
+        <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
       </form>
     </div>
   </div>
 </template>
 
 <style scoped>
-
+/* Same styles as provided earlier */
 * {
   margin: 0;
   padding: 0;
@@ -54,7 +87,6 @@ function handleLogin() {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-
 }
 
 .login-container {
@@ -114,7 +146,7 @@ function handleLogin() {
   color: white;
   font-family: 'Roboto', sans-serif;
   transition: border-color 0.3s;
-  border-radius: 4px; /* Add slight rounding */
+  border-radius: 0px; /* Add slight rounding */
   box-shadow: none; /* Remove input shadow */
 }
 
@@ -133,7 +165,7 @@ function handleLogin() {
   background-color: #64F244;
   color: black;
   padding: 1rem;
-  border-radius: 4px; /* Slight rounding for consistency */
+  border-radius: 0px; /* Slight rounding for consistency */
   font-size: 1.2rem; /* Font size adjustment */
   font-weight: 500;
   font-family: 'Roboto', sans-serif;
@@ -147,6 +179,10 @@ function handleLogin() {
   background-color: #ffffff;
   color: black;
 }
+
+.error-message {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+}
 </style>
-
-
