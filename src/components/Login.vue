@@ -1,7 +1,14 @@
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
+const email = ref('');
+const password = ref('');
+const router = useRouter();
 
+function handleLogin() {
+  router.push('/orders'); // Navigate to the Orders route
+}
 </script>
 
 <template>
@@ -34,41 +41,53 @@ import { ref } from 'vue'
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.body {
+  background-color: black;
+
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+
+}
 
 .login-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  background-color: black;
-  color: white;
+  min-height: 100vh; /* Full viewport height */
+  width: 100%; /* Full width */
+  margin: 0;
+  padding: 0;
+  background-color: black; /* Match global background */
+  color: white; /* Ensure text is white */
   font-family: 'Roboto', sans-serif;
 }
 
 .login-card {
   width: 100%;
-  max-width: 400px;
+  max-width: 400px; /* Restrict maximum width */
   padding: 3rem;
   text-align: center;
-  background: black;
+  background: black; /* Match global background */
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2rem;
+  border: none; /* Remove borders */
+  box-shadow: none; /* Remove box shadows */
 }
 
 .logo {
   width: 200px;
   height: auto;
   margin-bottom: 2rem;
-}
-
-h1 {
-  font-size: 2.4rem;
-  margin-bottom: 2rem;
-  font-weight: 700;
-  color: white;
 }
 
 .login-form {
@@ -89,21 +108,22 @@ h1 {
   width: 100%;
   max-width: 300px;
   padding: 1rem;
-  border: 1px solid #444;
-  font-size: 1.2rem;
-  background: #222;
+  border: 1px solid #444; /* Dark gray border */
+  font-size: 1rem; /* Adjust font size */
+  background: #222; /* Dark background */
   color: white;
   font-family: 'Roboto', sans-serif;
   transition: border-color 0.3s;
-  text-align: left;
+  border-radius: 4px; /* Add slight rounding */
+  box-shadow: none; /* Remove input shadow */
 }
 
 .form-input::placeholder {
-  color: #888;
+  color: #888; /* Lighter placeholder */
 }
 
 .form-input:focus {
-  border-color: #64F244;
+  border-color: #64F244; /* Green border on focus */
   outline: none;
 }
 
@@ -113,13 +133,14 @@ h1 {
   background-color: #64F244;
   color: black;
   padding: 1rem;
-  border-radius: 0px;
-  font-size: 1.3rem;
+  border-radius: 4px; /* Slight rounding for consistency */
+  font-size: 1.2rem; /* Font size adjustment */
   font-weight: 500;
   font-family: 'Roboto', sans-serif;
   cursor: pointer;
   transition: background-color 0.3s;
   text-align: center;
+  box-shadow: none; /* Remove button shadow */
 }
 
 .login-button:hover {
@@ -127,3 +148,5 @@ h1 {
   color: black;
 }
 </style>
+
+
