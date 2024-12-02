@@ -10,7 +10,7 @@
         </div>
       </div>
       <div class="sidebar-footer">
-        <div class="logout-button">Log Out</div>
+        <div class="logout-button" @click="logout">Log Out</div>
       </div>
     </aside>
 
@@ -18,7 +18,7 @@
     <main class="main-content">
       <header class="main-header">
         <h2>Orders</h2>
-        <p>28 orders found</p>
+        <p>{{ orders.length }} orders found</p>
       </header>
 
       <div class="orders-table">
@@ -32,8 +32,13 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="order in orders" :key="order.id">
-              <td>{{ order.id }}</td>
+            <tr
+              v-for="order in orders"
+              :key="order._id"
+              @click="viewOrder(order._id)"
+              class="order-row"
+            >
+              <td>{{ order._id }}</td>
               <td>{{ order.date }}</td>
               <td>{{ order.customer }}</td>
               <td>
@@ -41,16 +46,16 @@
                   v-model="order.status"
                   class="status-dropdown"
                   :class="{
-                    'border-pending': order.status === 'pending',
-                    'border-shipped': order.status === 'shipped',
+                    'border-pending': order.status === 'Pending',
+                    'border-shipped': order.status === 'Shipped',
                     'border-completed': order.status === 'Completed',
-                    'border-production': order.status === 'production',
+                    'border-production': order.status === 'Production',
                   }"
                 >
-                  <option value="pending">pending</option>
-                  <option value="shipped">Shipped</option>
-                  <option value="completed">Completed</option>
-                  <option value="production">In production</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Shipped">Shipped</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Production">In Production</option>
                 </select>
               </td>
             </tr>
@@ -66,13 +71,57 @@ export default {
   name: "Orders",
   data() {
     return {
-      orders: [
-        { id: "#1001", date: "01 Jan 2024", customer: "John Doe", status: "pending" },
-        { id: "#1002", date: "02 Jan 2024", customer: "Jane Smith", status: "pending" },
-        { id: "#1003", date: "03 Jan 2024", customer: "Michael Brown", status: "pending" },
-        { id: "#1004", date: "04 Jan 2024", customer: "Susan White", status: "pending" },
-      ],
+      orders: [], // Orders will be populated after fetching
     };
+  },
+  mounted() {
+    this.fetchOrders();
+  },
+  methods: {
+    async fetchOrders() {
+      try {
+        const token =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiI2NzQ5YzNlNTllZmNhYjc5NTE1NjVmYjgiLCJlbWFpbCI6ImFkbWluQHN3ZWFyLmNvbSIsImlhdCI6MTczMjg4NzUyNn0.tAIHAuZttTkKLdmqwMRNEk_2p67hdIIW3vyM_pzRNTY"; // Replace with your actual token
+
+        if (!token) {
+          throw new Error("Unauthorized: No token found.");
+        }
+
+        const response = await fetch(
+          "https://threed-sneaker-nodejs.onrender.com/api/v1/orders",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`, // Include the token here
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        // Transform the fetched orders into the required structure
+        this.orders = data.data.orders.map((order) => ({
+          _id: order._id,
+          date: new Date(order.orderDate).toLocaleDateString(), // Format the date
+          customer: order.user.name,
+          status: order.status,
+        }));
+      } catch (error) {
+        console.error("Failed to fetch orders:", error);
+      }
+    },
+    viewOrder(orderId) {
+      this.$router.push(`/order-details/${orderId}`);
+    },
+    logout() {
+      localStorage.removeItem("token"); // Remove token on logout
+      this.$router.push("/login"); // Redirect to login page
+    },
   },
 };
 </script>
@@ -206,9 +255,8 @@ export default {
   font-size: 1rem;
 }
 
-.status-dropdown.option {
-  background-color: #222;
-  color: white;
+.border-pending {
+  border-color: gray;
 }
 
 .border-shipped {
@@ -219,6 +267,7 @@ export default {
   border-color: green;
 }
 
-
-
+.border-production {
+  border-color: yellow;
+}
 </style>
