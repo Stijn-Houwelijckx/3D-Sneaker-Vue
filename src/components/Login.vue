@@ -29,9 +29,11 @@ function handleLogin() {
       return response.json();
     })
     .then((data) => {
-      // Process the response
-      const user = data.data.user.user;
-      console.log("Login successful:", user);
+      const token = data.data.token; // Extract token from response
+      if (token) {
+        localStorage.setItem("token", token); // Save token to localStorage
+        console.log("Token saved:", token);
+      }
 
       // Redirect to the orders page
       router.push("/orders");
@@ -42,6 +44,8 @@ function handleLogin() {
     });
 }
 </script>
+
+
 
 <template>
   <div class="login-container">

@@ -1,6 +1,5 @@
 <template>
   <div class="orders-container">
-    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <img src="/logo.png" alt="Logo" class="logo" />
@@ -14,7 +13,6 @@
       </div>
     </aside>
 
-    <!-- Main Content -->
     <main class="main-content">
       <header class="main-header">
         <h2>Orders</h2>
@@ -32,12 +30,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="order in orders"
-              :key="order._id"
-              @click="viewOrder(order._id)"
-              class="order-row"
-            >
+            <tr v-for="order in orders" :key="order._id" @click="viewOrder(order._id)" class="order-row">
               <td>{{ order._id }}</td>
               <td>{{ order.date }}</td>
               <td>{{ order.customer }}</td>
@@ -71,7 +64,7 @@ export default {
   name: "Orders",
   data() {
     return {
-      orders: [], // Orders will be populated after fetching
+      orders: [],
     };
   },
   mounted() {
@@ -80,9 +73,7 @@ export default {
   methods: {
     async fetchOrders() {
       try {
-        const token =
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiI2NzQ5YzNlNTllZmNhYjc5NTE1NjVmYjgiLCJlbWFpbCI6ImFkbWluQHN3ZWFyLmNvbSIsImlhdCI6MTczMjg4NzUyNn0.tAIHAuZttTkKLdmqwMRNEk_2p67hdIIW3vyM_pzRNTY"; // Replace with your actual token
-
+        const token = localStorage.getItem("token"); // Retrieve token from localStorage
         if (!token) {
           throw new Error("Unauthorized: No token found.");
         }
@@ -93,7 +84,7 @@ export default {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`, // Include the token here
+              Authorization: `Bearer ${token}`, // Dynamically include token
             },
           }
         );
@@ -103,11 +94,9 @@ export default {
         }
 
         const data = await response.json();
-
-        // Transform the fetched orders into the required structure
         this.orders = data.data.orders.map((order) => ({
           _id: order._id,
-          date: new Date(order.orderDate).toLocaleDateString(), // Format the date
+          date: new Date(order.orderDate).toLocaleDateString(),
           customer: order.user.name,
           status: order.status,
         }));
@@ -120,11 +109,12 @@ export default {
     },
     logout() {
       localStorage.removeItem("token"); // Remove token on logout
-      this.$router.push("/login"); // Redirect to login page
+      this.$router.push("/login");
     },
   },
 };
 </script>
+
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
