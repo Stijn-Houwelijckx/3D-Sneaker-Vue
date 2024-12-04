@@ -14,14 +14,15 @@
           <div class="status-group">
             <p><strong>Status:</strong></p>
             <select
-              v-model="order.status"
+              v-model="tempStatus"
               class="status-dropdown"
-              :class="statusClass(order.status)"
+              :class="statusClass(tempStatus)"
+              @change="showConfirmationModal"
             >
               <option value="Pending">Pending</option>
               <option value="Shipped">Shipped</option>
               <option value="Completed">Completed</option>
-              <option value="Production">In Production</option>
+              <option value="In production">In Production</option>
             </select>
           </div>
         </div>
@@ -79,6 +80,21 @@
     <div v-else class="error-container">
       <p class="error-text">{{ error }}</p>
     </div>
+
+    <!-- Confirmation Modal -->
+    <div v-if="showModal" class="modal-overlay">
+      <div class="modal">
+        <h2>Confirm Status Change</h2>
+        <p>
+          Are you sure you want to change the status of Order ID
+          "{{ order._id }}" to "{{ tempStatus }}"?
+        </p>
+        <div class="modal-actions">
+          <button class="confirm-button" @click="confirmStatusChange">Confirm</button>
+          <button class="cancel-button" @click="closeModal">Cancel</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -88,8 +104,10 @@ export default {
   data() {
     return {
       order: null,
+      tempStatus: null, // Temporary status before confirmation
       loading: true,
       error: null,
+      showModal: false,
     };
   },
   computed: {
@@ -108,15 +126,57 @@ export default {
           return "border-shipped";
         case "Completed":
           return "border-completed";
-        case "Production":
+        case "In production":
           return "border-production";
         default:
           return "";
       }
     },
+    showConfirmationModal() {
+      this.showModal = true; // Open the modal
+    },
+    async confirmStatusChange() {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("Unauthorized: No token found.");
+        }
+
+        const response = await fetch(
+          `https://threed-sneaker-nodejs.onrender.com/api/v1/orders/${this.order._id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              order: { status: this.tempStatus }, // Send tempStatus in the request
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("Order status updated successfully:", data);
+
+        // Update the actual status only after confirmation
+        this.order.status = this.tempStatus;
+        this.closeModal(); // Close the modal
+      } catch (error) {
+        console.error("Failed to update order status:", error);
+      }
+    },
+    closeModal() {
+      this.showModal = false;
+      this.tempStatus = this.order.status; // Revert tempStatus to the original value
+    },
   },
   async mounted() {
-    const orderId = this.$route.params.id;
+    const orderId = this.$route.params.id; // Get the order ID from the route parameters
     const token = localStorage.getItem("token");
 
     if (!token) {
@@ -143,11 +203,15 @@ export default {
 
       const data = await response.json();
       const orders = data.data.orders;
+
+      // Find the specific order by ID
       this.order = orders.find((order) => order._id === orderId);
 
       if (!this.order) {
         throw new Error("Order not found.");
       }
+
+      this.tempStatus = this.order.status; // Initialize tempStatus with the current status
     } catch (error) {
       console.error("Failed to fetch order details:", error);
       this.error = error.message;
@@ -163,6 +227,87 @@ export default {
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
 /* Full-page layout */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal {
+  background-color: white;
+  color: black;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 400px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.modal h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  color: black;
+}
+
+.modal p {
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.confirm-button {
+  background-color: #64f244;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.cancel-button {
+  background-color: #f24444;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.confirm-button:hover,
+.cancel-button:hover {
+  opacity: 0.8;
+}
+
+/* Full-page layout */
+.order-details-container {
+  padding: 2rem;
+  color: white;
+  background-color: black;
+  font-family: 'Roboto', sans-serif;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* Header Styling */
+.header {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #64f244;
+  margin-bottom: 2rem;
+}
 .order-details-container {
   padding: 2rem;
   color: white;
