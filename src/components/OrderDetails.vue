@@ -65,9 +65,10 @@
         </table>
       </section>
 
-      <!-- Back Button -->
+      <!-- Back and Delete Buttons -->
       <div class="actions">
         <router-link to="/orders" class="button back-button">Back to Orders</router-link>
+        <button class="delete-button" @click="showDeleteConfirmation">Delete Order</button>
       </div>
     </div>
 
@@ -84,13 +85,23 @@
     <!-- Confirmation Modal -->
     <div v-if="showModal" class="modal-overlay">
       <div class="modal">
-        <h2>Confirm Status Change</h2>
-        <p>
+        <h2 v-if="isDeleting">Confirm Delete Order</h2>
+        <h2 v-else>Confirm Status Change</h2>
+        <p v-if="isDeleting">
+          Are you sure you want to delete Order ID "{{ order._id }}"? This action
+          cannot be undone.
+        </p>
+        <p v-else>
           Are you sure you want to change the status of Order ID
           "{{ order._id }}" to "{{ tempStatus }}"?
         </p>
         <div class="modal-actions">
-          <button class="confirm-button" @click="confirmStatusChange">Confirm</button>
+          <button
+            class="confirm-button"
+            @click="isDeleting ? confirmDeleteOrder() : confirmStatusChange()"
+          >
+            Confirm
+          </button>
           <button class="cancel-button" @click="closeModal">Cancel</button>
         </div>
       </div>
@@ -108,6 +119,7 @@ export default {
       loading: true,
       error: null,
       showModal: false,
+      isDeleting: false, // Track whether the modal is for deleting
     };
   },
   computed: {
@@ -133,6 +145,7 @@ export default {
       }
     },
     showConfirmationModal() {
+      this.isDeleting = false; // Not in delete mode
       this.showModal = true; // Open the modal
     },
     async confirmStatusChange() {
@@ -170,8 +183,40 @@ export default {
         console.error("Failed to update order status:", error);
       }
     },
+    showDeleteConfirmation() {
+      this.isDeleting = true; // Set delete mode
+      this.showModal = true; // Open the modal
+    },
+    async confirmDeleteOrder() {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("Unauthorized: No token found.");
+        }
+
+        const response = await fetch(
+          `https://threed-sneaker-nodejs.onrender.com/api/v1/orders/${this.order._id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Error: ${response.status} ${response.statusText}`);
+        }
+
+        console.log("Order deleted successfully");
+        this.$router.push("/orders"); // Redirect to orders list
+      } catch (error) {
+        console.error("Failed to delete order:", error);
+      }
+    },
     closeModal() {
       this.showModal = false;
+      this.isDeleting = false;
       this.tempStatus = this.order.status; // Revert tempStatus to the original value
     },
   },
@@ -239,6 +284,24 @@ export default {
   justify-content: center;
   align-items: center;
   z-index: 9999;
+}
+
+/* Delete button */
+.delete-button {
+  color: #ff0000; /* Bright red */
+  font-weight: bold;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  margin-left: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: color 0.2s ease-in-out;
+  background: none; /* Clean, no background */
+}
+
+.delete-button:hover {
+  color: #cc0000; /* Darker red on hover */
 }
 
 .modal {

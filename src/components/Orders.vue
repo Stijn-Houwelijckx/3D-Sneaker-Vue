@@ -226,14 +226,14 @@ export default {
 
         console.log("Order deleted successfully");
 
-        // Remove the deleted order from the local state
+        
         this.orders = this.orders.filter(
           (order) => order._id !== this.selectedOrder._id
         );
       } catch (error) {
         console.error("Failed to delete order:", error);
       } finally {
-        this.closeDeleteModal(); // Close the delete confirmation modal
+        this.closeDeleteModal(); 
       }
     },
     closeDeleteModal() {
@@ -254,7 +254,6 @@ export default {
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
 
-/* Main container */
 .orders-container {
   display: flex;
   height: 100vh;
@@ -265,17 +264,20 @@ export default {
 
 .delete-button {
   background: none;
-  color: red;
+  color: #ff0000; 
   border: none;
-  font-weight: bold;
-  font-size: 1.2rem;
+  font-weight: 700;
+  font-size: 1.5rem; 
+  font-family: Arial, sans-serif;
   cursor: pointer;
   line-height: 1;
   padding: 0;
+  margin-left: 0.5rem; 
+  transition: color 0.2s ease-in-out;
 }
 
 .delete-button:hover {
-  color: darkred;
+  color: #cc0000; 
 }
 
 /* Sidebar */
@@ -389,7 +391,7 @@ export default {
 .status-dropdown {
   background-color: #222;
   color: white;
-  border: 2px solid #444; /* Default border color */
+  border: 2px solid #444; 
   padding: 0.5rem;
   border-radius: 4px;
   font-size: 1rem;
