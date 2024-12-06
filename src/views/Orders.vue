@@ -8,8 +8,35 @@
         :subtitle="`${orders.length} orders found`"
       />
 
+      <!-- Bulk Action Dropdown -->
+      <div class="bulk-actions">
+        <select
+          v-model="bulkStatus"
+          class="bulk-dropdown"
+          :disabled="!selectedOrders.length"
+        >
+          <option value="" disabled selected>
+            Change status for selected
+          </option>
+          <option value="Pending">Pending</option>
+          <option value="Shipped">Shipped</option>
+          <option value="Completed">Completed</option>
+          <option value="In production">In Production</option>
+        </select>
+        <button
+          class="apply-button"
+          :disabled="!selectedOrders.length || !bulkStatus"
+          @click="bulkUpdateStatus"
+        >
+          Apply
+        </button>
+      </div>
+
       <OrderList
         :orders="orders"
+        :selected-orders="selectedOrders"
+        @toggle-order-selection="toggleOrderSelection"
+        @toggle-all-orders="toggleAllOrders"
         @set-previous-status="setPreviousStatus"
         @show-confirmation-modal="showConfirmationModal"
         @show-delete-confirmation="showDeleteConfirmation"
@@ -54,6 +81,8 @@ export default {
   data() {
     return {
       orders: [],
+      selectedOrders: [],
+      bulkStatus: "",
       showModal: false,
       showDeleteModal: false,
       selectedOrder: null,
@@ -65,84 +94,67 @@ export default {
   },
   methods: {
     async fetchOrders() {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("Unauthorized: No token found.");
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await fetch(
+        "https://threed-sneaker-nodejs.onrender.com/api/v1/orders",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
+      );
 
-        const response = await fetch(
-          "https://threed-sneaker-nodejs.onrender.com/api/v1/orders",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+      if (!response.ok) return;
 
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        this.orders = data.data.orders.map((order) => ({
-          _id: order._id,
-          date: new Date(order.orderDate).toLocaleDateString(),
-          customer: order.user.name,
-          status: order.status,
-        }));
-      } catch (error) {
-        console.error("Failed to fetch orders:", error);
-      }
+      const data = await response.json();
+      this.orders = data.data.orders.map((order) => ({
+        _id: order._id,
+        date: new Date(order.orderDate).toLocaleDateString(),
+        customer: order.user.name,
+        status: order.status,
+      }));
     },
     setPreviousStatus(order) {
       this.previousStatus = order.status;
     },
     showConfirmationModal(order) {
-      this.selectedOrder = order;
+      this.selectedOrder = { ...order };
       this.showModal = true;
     },
-    showDeleteConfirmation(order) {
-      this.selectedOrder = order;
-      this.showDeleteModal = true;
-    },
     async updateOrderStatus() {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("Unauthorized: No token found.");
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await fetch(
+        `https://threed-sneaker-nodejs.onrender.com/api/v1/orders/${this.selectedOrder._id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            order: { status: this.selectedOrder.status },
+          }),
         }
+      );
 
-        const response = await fetch(
-          `https://threed-sneaker-nodejs.onrender.com/api/v1/orders/${this.selectedOrder._id}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              order: { status: this.selectedOrder.status },
-            }),
-          }
-        );
+      if (!response.ok) return;
 
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log("Order status updated successfully:", data);
-
-        this.closeModal();
-      } catch (error) {
-        console.error("Failed to update order status:", error);
-      }
+      this.fetchOrders();
+      this.closeModal();
     },
     cancelStatusChange() {
-      this.selectedOrder.status = this.previousStatus;
+      const orderIndex = this.orders.findIndex(
+        (order) => order._id === this.selectedOrder._id
+      );
+      if (orderIndex !== -1) {
+        this.orders[orderIndex].status = this.previousStatus;
+      }
       this.closeModal();
     },
     closeModal() {
@@ -150,37 +162,67 @@ export default {
       this.selectedOrder = null;
       this.previousStatus = null;
     },
-    async deleteOrder() {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("Unauthorized: No token found.");
-        }
+    async bulkUpdateStatus() {
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-        const response = await fetch(
-          `https://threed-sneaker-nodejs.onrender.com/api/v1/orders/${this.selectedOrder._id}`,
-          {
-            method: "DELETE",
+      await Promise.all(
+        this.selectedOrders.map((orderId) =>
+          fetch(`https://threed-sneaker-nodejs.onrender.com/api/v1/orders/${orderId}`, {
+            method: "PUT",
             headers: {
+              "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-          }
-        );
+            body: JSON.stringify({
+              order: { status: this.bulkStatus },
+            }),
+          })
+        )
+      );
 
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status} ${response.statusText}`);
-        }
-
-        console.log("Order deleted successfully");
-
-        this.orders = this.orders.filter(
-          (order) => order._id !== this.selectedOrder._id
-        );
-      } catch (error) {
-        console.error("Failed to delete order:", error);
-      } finally {
-        this.closeDeleteModal();
+      this.fetchOrders();
+      this.bulkStatus = "";
+      this.selectedOrders = [];
+    },
+    toggleOrderSelection(orderId) {
+      if (this.selectedOrders.includes(orderId)) {
+        this.selectedOrders = this.selectedOrders.filter((id) => id !== orderId);
+      } else {
+        this.selectedOrders.push(orderId);
       }
+    },
+    toggleAllOrders(selectAll) {
+      if (selectAll) {
+        this.selectedOrders = this.orders.map((order) => order._id);
+      } else {
+        this.selectedOrders = [];
+      }
+    },
+    showDeleteConfirmation(order) {
+      this.selectedOrder = order;
+      this.showDeleteModal = true;
+    },
+    async deleteOrder() {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const response = await fetch(
+        `https://threed-sneaker-nodejs.onrender.com/api/v1/orders/${this.selectedOrder._id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) return;
+
+      this.orders = this.orders.filter(
+        (order) => order._id !== this.selectedOrder._id
+      );
+      this.closeDeleteModal();
     },
     closeDeleteModal() {
       this.showDeleteModal = false;
@@ -207,5 +249,36 @@ export default {
   padding: 2rem;
   background-color: black;
   overflow-y: auto;
+}
+
+.bulk-actions {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.bulk-dropdown {
+  padding: 0.5rem;
+  border: 2px solid #444;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: #222;
+  color: white;
+}
+
+.apply-button {
+  background-color: #64f244;
+  border: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.apply-button:disabled,
+.bulk-dropdown:disabled {
+  background-color: #555;
+  cursor: not-allowed;
 }
 </style>
