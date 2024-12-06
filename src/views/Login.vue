@@ -6,6 +6,7 @@ import { useRouter } from "vue-router";
 const email = ref("");
 const password = ref("");
 const errorMessage = ref("");
+const showPassword = ref(false); // State to toggle password visibility
 const router = useRouter();
 
 // Login Function using fetch
@@ -32,20 +33,16 @@ function handleLogin() {
       const token = data.data.token; // Extract token from response
       if (token) {
         localStorage.setItem("token", token); // Save token to localStorage
-        console.log("Token saved:", token);
       }
 
       // Redirect to the orders page
       router.push("/orders");
     })
     .catch((error) => {
-      console.error("Error:", error);
       errorMessage.value = error.message;
     });
 }
 </script>
-
-
 
 <template>
   <div class="login-container">
@@ -61,14 +58,21 @@ function handleLogin() {
             class="form-input"
           />
         </div>
-        <div class="form-group">
+        <div class="form-group password-group">
           <input
             v-model="password"
-            type="password"
+            :type="showPassword ? 'text' : 'password'"
             placeholder="Password"
             required
-            class="form-input"
+            class="form-input password-input"
           />
+          <button
+            type="button"
+            class="toggle-password"
+            @click="showPassword = !showPassword"
+          >
+            👁️‍🗨️
+          </button>
         </div>
         <button type="submit" class="login-button">Log In</button>
         <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
@@ -78,7 +82,8 @@ function handleLogin() {
 </template>
 
 <style scoped>
-/* Same styles as provided earlier */
+/* Original styles */
+
 * {
   margin: 0;
   padding: 0;
@@ -87,7 +92,6 @@ function handleLogin() {
 
 .body {
   background-color: black;
-
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -97,27 +101,26 @@ function handleLogin() {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh; /* Full viewport height */
-  width: 100%; /* Full width */
+  min-height: 100vh;
+  width: 100%;
   margin: 0;
   padding: 0;
-  background-color: black; /* Match global background */
-  color: white; /* Ensure text is white */
+  background-color: black;
+  color: white;
   font-family: 'Roboto', sans-serif;
 }
 
 .login-card {
   width: 100%;
-  max-width: 400px; /* Restrict maximum width */
+  max-width: 400px;
   padding: 3rem;
   text-align: center;
-  background: black; /* Match global background */
+  background: black;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2rem;
-  border: none; /* Remove borders */
-  box-shadow: none; /* Remove box shadows */
+  border: none;
 }
 
 .logo {
@@ -140,26 +143,46 @@ function handleLogin() {
   justify-content: center;
 }
 
-.form-input {
+.password-group {
+  display: flex;
+  position: relative;
+  align-items: center;
   width: 100%;
   max-width: 300px;
+}
+
+.form-input {
+  width: 100%;
   padding: 1rem;
-  border: 1px solid #444; /* Dark gray border */
-  font-size: 1rem; /* Adjust font size */
-  background: #222; /* Dark background */
+  border: 1px solid #444;
+  font-size: 1rem;
+  background: #222;
   color: white;
-  font-family: 'Roboto', sans-serif;
   transition: border-color 0.3s;
-  border-radius: 0px; /* Add slight rounding */
-  box-shadow: none; /* Remove input shadow */
+  border-radius: 0;
 }
 
 .form-input::placeholder {
-  color: #888; /* Lighter placeholder */
+  color: #888;
 }
 
 .form-input:focus {
-  border-color: #64F244; /* Green border on focus */
+  border-color: #64F244;
+  outline: none;
+}
+
+.password-input {
+  padding-right: 3rem; /* Space for the eye icon */
+}
+
+.toggle-password {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1.2rem;
   outline: none;
 }
 
@@ -169,14 +192,13 @@ function handleLogin() {
   background-color: #64F244;
   color: black;
   padding: 1rem;
-  border-radius: 0px; /* Slight rounding for consistency */
-  font-size: 1.2rem; /* Font size adjustment */
+  border-radius: 0;
+  font-size: 1.2rem;
   font-weight: 500;
   font-family: 'Roboto', sans-serif;
   cursor: pointer;
   transition: background-color 0.3s;
   text-align: center;
-  box-shadow: none; /* Remove button shadow */
 }
 
 .login-button:hover {
