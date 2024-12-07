@@ -111,19 +111,14 @@ export default {
       if (!response.ok) return;
 
       const data = await response.json();
-      this.orders = data.data.orders.map((order) => ({
-        _id: order._id,
-        date: new Date(order.orderDate).toLocaleDateString(),
-        customer: order.user.name,
-        status: order.status,
-      }));
-    },
-    setPreviousStatus(order) {
-      this.previousStatus = order.status;
-    },
-    showConfirmationModal(order) {
-      this.selectedOrder = { ...order };
-      this.showModal = true;
+      this.orders = data.data.orders
+        .map((order) => ({
+          _id: order._id,
+          date: new Date(order.orderDate).toLocaleDateString(),
+          customer: order.user.name,
+          status: order.status,
+        }))
+        .reverse(); // Reverse to ensure the latest orders appear first
     },
     async updateOrderStatus() {
       const token = localStorage.getItem("token");
@@ -148,6 +143,17 @@ export default {
       this.fetchOrders();
       this.closeModal();
     },
+    addNewOrder(newOrder) {
+      this.orders = [
+        {
+          _id: newOrder._id,
+          date: new Date(newOrder.orderDate).toLocaleDateString(),
+          customer: newOrder.user.name,
+          status: newOrder.status,
+        },
+        ...this.orders, // Prepend the new order
+      ];
+    },
     cancelStatusChange() {
       const orderIndex = this.orders.findIndex(
         (order) => order._id === this.selectedOrder._id
@@ -156,11 +162,6 @@ export default {
         this.orders[orderIndex].status = this.previousStatus;
       }
       this.closeModal();
-    },
-    closeModal() {
-      this.showModal = false;
-      this.selectedOrder = null;
-      this.previousStatus = null;
     },
     async bulkUpdateStatus() {
       const token = localStorage.getItem("token");
@@ -227,6 +228,18 @@ export default {
     closeDeleteModal() {
       this.showDeleteModal = false;
       this.selectedOrder = null;
+    },
+    closeModal() {
+      this.showModal = false;
+      this.selectedOrder = null;
+      this.previousStatus = null;
+    },
+    setPreviousStatus(order) {
+      this.previousStatus = order.status;
+    },
+    showConfirmationModal(order) {
+      this.selectedOrder = { ...order };
+      this.showModal = true;
     },
     viewOrder(orderId) {
       this.$router.push(`/order-details/${orderId}`);

@@ -2,12 +2,14 @@ import { createRouter, createWebHistory } from "vue-router";
 import Login from "../views/Login.vue";
 import Orders from "../views/Orders.vue";
 import OrderDetails from "../views/OrderDetails.vue";
+import Settings from "../views/Settings.vue";
 
 const routes = [
   { path: "/", redirect: "/login" },
   { path: "/login", component: Login },
   { path: "/orders", component: Orders, meta: { requiresAuth: true } },
   { path: "/order-details/:id", component: OrderDetails, meta: { requiresAuth: true } },
+  { path: "/settings", component: Settings, meta: { requiresAuth: true } },
 ];
 
 const router = createRouter({
