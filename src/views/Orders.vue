@@ -15,9 +15,7 @@
           class="bulk-dropdown"
           :disabled="!selectedOrders.length"
         >
-          <option value="" disabled selected>
-            Change status for selected
-          </option>
+          <option value="" disabled selected>Change status for selected</option>
           <option value="Pending">Pending</option>
           <option value="Shipped">Shipped</option>
           <option value="Completed">Completed</option>
@@ -90,9 +88,26 @@ export default {
     };
   },
   mounted() {
+    this.initializePrimus();
     this.fetchOrders();
   },
   methods: {
+    // Initialize Primus for real-time updates
+    initializePrimus() {
+      const primus = Primus.connect("http://localhost:3000", {
+        reconnect: {
+          max: Infinity,
+          min: 500,
+          retries: 10,
+        },
+      });
+
+      primus.on("data", (json) => {
+        if (json.action === "newOrder") {
+          this.addNewOrder(json.data.data.order);
+        }
+      });
+    },
     async fetchOrders() {
       const token = localStorage.getItem("token");
       if (!token) return;
@@ -144,6 +159,9 @@ export default {
       this.closeModal();
     },
     addNewOrder(newOrder) {
+      console.log("New order received:");
+      console.log(newOrder);
+
       this.orders = [
         {
           _id: newOrder._id,
@@ -169,16 +187,19 @@ export default {
 
       await Promise.all(
         this.selectedOrders.map((orderId) =>
-          fetch(`https://threed-sneaker-nodejs.onrender.com/api/v1/orders/${orderId}`, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              order: { status: this.bulkStatus },
-            }),
-          })
+          fetch(
+            `https://threed-sneaker-nodejs.onrender.com/api/v1/orders/${orderId}`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                order: { status: this.bulkStatus },
+              }),
+            }
+          )
         )
       );
 
@@ -188,7 +209,9 @@ export default {
     },
     toggleOrderSelection(orderId) {
       if (this.selectedOrders.includes(orderId)) {
-        this.selectedOrders = this.selectedOrders.filter((id) => id !== orderId);
+        this.selectedOrders = this.selectedOrders.filter(
+          (id) => id !== orderId
+        );
       } else {
         this.selectedOrders.push(orderId);
       }
@@ -254,7 +277,7 @@ export default {
   height: 100vh;
   background-color: black;
   color: white;
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
 }
 
 .main-content {
