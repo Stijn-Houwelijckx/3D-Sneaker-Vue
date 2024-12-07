@@ -25,13 +25,13 @@
               :checked="selectedOrders.includes(order._id)"
             />
           </td>
-          <td @click="viewOrder(order._id)">{{ order._id }}</td>
-          <td @click="viewOrder(order._id)">{{ order.date }}</td>
-          <td @click="viewOrder(order._id)">{{ order.customer }}</td>
+          <td @click="viewOrder(order._id)" class="clickable">{{ order._id }}</td>
+          <td @click="viewOrder(order._id)" class="clickable">{{ order.date }}</td>
+          <td @click="viewOrder(order._id)" class="clickable">{{ order.customer }}</td>
           <td>
             <select
               v-model="order.status"
-              class="status-dropdown"
+              class="status-dropdown clickable"
               :class="{
                 'border-pending': order.status === 'Pending',
                 'border-shipped': order.status === 'Shipped',
@@ -126,6 +126,7 @@ export default {
   padding: 0.5rem;
   border-radius: 4px;
   font-size: 1rem;
+  cursor: pointer; /* Add pointer cursor for dropdown */
 }
 
 .border-pending {
@@ -163,5 +164,9 @@ export default {
 
 .orders-table input[type="checkbox"] {
   cursor: pointer;
+}
+
+.clickable {
+  cursor: pointer; /* Add pointer cursor for table cells */
 }
 </style>
