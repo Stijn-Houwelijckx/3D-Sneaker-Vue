@@ -94,13 +94,16 @@ export default {
   methods: {
     // Initialize Primus for real-time updates
     initializePrimus() {
-      const primus = Primus.connect("http://localhost:3000", {
-        reconnect: {
-          max: Infinity,
-          min: 500,
-          retries: 10,
-        },
-      });
+      const primus = Primus.connect(
+        "https://threed-sneaker-nodejs.onrender.com",
+        {
+          reconnect: {
+            max: Infinity,
+            min: 500,
+            retries: 10,
+          },
+        }
+      );
 
       primus.on("data", (json) => {
         if (json.action === "newOrder") {
