@@ -3,8 +3,20 @@
     <div class="sidebar-header">
       <img src="/logo.png" alt="Logo" class="logo" />
       <div class="sidebar-links">
-        <div class="nav-link" @click="navigateTo('/orders')">Orders</div>
-        <div class="nav-link" @click="navigateTo('/settings')">Settings</div>
+        <div
+          class="nav-link"
+          :class="{ active: isActive('/orders') }"
+          @click="navigateTo('/orders')"
+        >
+          Orders
+        </div>
+        <div
+          class="nav-link"
+          :class="{ active: isActive('/settings') }"
+          @click="navigateTo('/settings')"
+        >
+          Settings
+        </div>
       </div>
     </div>
     <div class="sidebar-footer">
@@ -23,6 +35,9 @@ export default {
     logout() {
       localStorage.removeItem("token");
       this.$router.push("/login");
+    },
+    isActive(path) {
+      return this.$route.path === path; // Check if the current route matches the given path
     },
   },
 };
@@ -70,6 +85,11 @@ export default {
 
 .nav-link:hover {
   color: white;
+}
+
+.nav-link.active {
+  color: white; 
+  font-weight: bold; 
 }
 
 .sidebar-footer {
