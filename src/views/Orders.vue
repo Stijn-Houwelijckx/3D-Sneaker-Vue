@@ -8,38 +8,45 @@
         :subtitle="`${orders.length} orders found`"
       />
 
-      <!-- Bulk Action Dropdown -->
-      <div class="bulk-actions">
-        <select
-          v-model="bulkStatus"
-          class="bulk-dropdown"
-          :disabled="!selectedOrders.length"
-        >
-          <option value="" disabled selected>Change status for selected</option>
-          <option value="Pending">Pending</option>
-          <option value="Shipped">Shipped</option>
-          <option value="Completed">Completed</option>
-          <option value="In production">In Production</option>
-        </select>
-        <button
-          class="apply-button"
-          :disabled="!selectedOrders.length || !bulkStatus"
-          @click="bulkUpdateStatus"
-        >
-          Apply
-        </button>
+      <!-- Display message when no orders are found -->
+      <div v-if="orders.length === 0" class="no-orders">
+        <p>No orders found. Please check back later.</p>
       </div>
 
-      <OrderList
-        :orders="orders"
-        :selected-orders="selectedOrders"
-        @toggle-order-selection="toggleOrderSelection"
-        @toggle-all-orders="toggleAllOrders"
-        @set-previous-status="setPreviousStatus"
-        @show-confirmation-modal="showConfirmationModal"
-        @show-delete-confirmation="showDeleteConfirmation"
-        @view-order="viewOrder"
-      />
+      <!-- Bulk Action Dropdown -->
+      <div v-else>
+        <div class="bulk-actions">
+          <select
+            v-model="bulkStatus"
+            class="bulk-dropdown"
+            :disabled="!selectedOrders.length"
+          >
+            <option value="" disabled selected>Change status for selected</option>
+            <option value="Pending">Pending</option>
+            <option value="Shipped">Shipped</option>
+            <option value="Completed">Completed</option>
+            <option value="In production">In Production</option>
+          </select>
+          <button
+            class="apply-button"
+            :disabled="!selectedOrders.length || !bulkStatus"
+            @click="bulkUpdateStatus"
+          >
+            Apply
+          </button>
+        </div>
+
+        <OrderList
+          :orders="orders"
+          :selected-orders="selectedOrders"
+          @toggle-order-selection="toggleOrderSelection"
+          @toggle-all-orders="toggleAllOrders"
+          @set-previous-status="setPreviousStatus"
+          @show-confirmation-modal="showConfirmationModal"
+          @show-delete-confirmation="showDeleteConfirmation"
+          @view-order="viewOrder"
+        />
+      </div>
 
       <!-- Status Change Confirmation Modal -->
       <ConfirmationModal
@@ -130,13 +137,15 @@ export default {
 
       const data = await response.json();
       this.orders = data.data.orders
-        .map((order) => ({
-          _id: order._id,
-          date: new Date(order.orderDate).toLocaleDateString(),
-          customer: order.user.name,
-          status: order.status,
-        }))
-        .reverse(); // Reverse to ensure the latest orders appear first
+        ? data.data.orders
+            .map((order) => ({
+              _id: order._id,
+              date: new Date(order.orderDate).toLocaleDateString(),
+              customer: order.user.name,
+              status: order.status,
+            }))
+            .reverse() // Reverse to ensure the latest orders appear first
+        : [];
     },
     async updateOrderStatus() {
       const token = localStorage.getItem("token");
@@ -319,5 +328,12 @@ export default {
 .bulk-dropdown:disabled {
   background-color: #555;
   cursor: not-allowed;
+}
+
+.no-orders {
+  text-align: center;
+  color: white;
+  font-size: 1.5rem;
+  font-weight: bold;
 }
 </style>
